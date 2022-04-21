@@ -1,0 +1,26 @@
+referenceless_regression_metric:
+  class_path: comet.models.ReferencelessRegression
+  init_args:
+    nr_frozen_epochs: 0.0
+    keep_embeddings_frozen: False
+    optimizer: AdamW
+    encoder_learning_rate: 1.0e-05
+    learning_rate: 3.1e-05
+    layerwise_decay: 0.95
+    encoder_model: XLM-RoBERTa
+    pretrained_model: xlm-roberta-base
+    pool: avg
+    layer: mix
+    dropout: 0.15
+    batch_size: 4
+    train_data: /fs/startiger0/nmoghe/data/qe_data/mlqe/data/2020-train-qe-raw.csv
+    validation_data: /fs/startiger0/nmoghe/data/qe_data/wmt-metrics/wmt20/2020-mlqe-dev.csv
+    hidden_sizes:
+      - 2048
+      - 1024
+    load_weights_from_checkpoint: /fs/startiger0/nmoghe/code/COMET/comet/lightning_logs/version_8/checkpoints/checkpoint.ckpt
+    final_activation: Sigmoid    
+    
+trainer: ../trainer.yaml
+early_stopping: ../early_stopping_mse.yaml
+model_checkpoint: ../model_checkpoint_mse.yaml

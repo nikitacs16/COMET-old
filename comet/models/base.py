@@ -204,6 +204,8 @@ class CometModel(ptl.LightningModule, metaclass=abc.ABCMeta):
             self._frozen = False
             if self.hparams.keep_embeddings_frozen:
                 self.encoder.freeze_embeddings()
+            else:
+                logger.info("Encoder model fine-tuning") 
 
     def on_train_epoch_end(self) -> None:
         """Hook used to unfreeze encoder during training."""

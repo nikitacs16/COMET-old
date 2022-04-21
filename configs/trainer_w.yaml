@@ -38,7 +38,7 @@ init_args:
   detect_anomaly: False
   tpu_cores: null
   track_grad_norm: -1
-  val_check_interval: 1.0
+  val_check_interval: 0.25
   enable_model_summary: True
   move_metrics_to_cpu: True
   multiple_trainloader_mode: max_size_cycle

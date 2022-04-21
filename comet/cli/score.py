@@ -151,13 +151,13 @@ def score_command() -> None:
             print("SacreBLEU error:", e, file=sys.stderr)
             sys.exit(1)
 
-    if (cfg.references is None) and (
-        not any([i in cfg.model for i in _REFLESS_MODELS])
+    
+    if (cfg.references is None) and (not any([i in cfg.model for i in _REFLESS_MODELS])
     ):
         parser.error(
             "{} requires -r/--references or -d/--sacrebleu_dataset.".format(cfg.model)
         )
-
+    
     if cfg.model.endswith(".ckpt") and os.path.exists(cfg.model):
         model_path = cfg.model
     elif cfg.model in available_metrics:
