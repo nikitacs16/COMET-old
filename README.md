@@ -8,14 +8,11 @@
   <a href="https://github.com/psf/black"><img alt="Code Style" src="https://img.shields.io/badge/code%20style-black-black" /></a>
 </p>
 
-> Version 1.0 is finally out 🥳! whats new?
-> 1) `comet-compare` command for statistical comparison between two models
-> 2) `comet-score` with multiple hypothesis/systems
-> 3) Embeddings caching for faster inference (thanks to [@jsouza](https://github.com/jsouza)).
-> 4) Length Batching for faster inference (thanks to [@CoderPat](https://github.com/CoderPat))
-> 5) Integration with SacreBLEU for dataset downloading (thanks to [@mjpost](https://github.com/mjpost))
-> 6) Monte-carlo Dropout for uncertainty estimation (thanks to [@glushkovato](https://github.com/glushkovato) and [@chryssa-zrv](https://github.com/chryssa-zrv))
-> 7) Some code refactoring 
+> Version 1.1 is out 🥳! whats new?
+> 1) Updated [documentation](https://unbabel.github.io/COMET/html/index.html)
+> 2) Updated Pytorch Lightning version to avoid security vulnerabilities (Untrusted Data & Code Injection)
+> 3) Inspired by [Amrhein et al, 2022](https://arxiv.org/abs/2202.05148) we added the `comet-mbr` command for fast Minimum Bayes Risk Decoding.
+> 4) New encoder models
 
 ## Quick Installation
 
@@ -27,7 +24,7 @@ pip install unbabel-comet
 ```
 or
 ```bash
-pip install unbabel-comet==1.0.1 --use-feature=2020-resolver
+pip install unbabel-comet==1.1.0 --use-feature=2020-resolver
 ```
 
 To develop locally install [Poetry](https://python-poetry.org/docs/#installation) and run the following commands:
@@ -82,7 +79,7 @@ comet-score -s src.de -t hyp1.en -r ref.en --quiet
 You can select another model/metric with the --model flag and for reference-free (QE-as-a-metric) models you don't need to pass a reference.
 
 ```bash
-comet-score -s src.de -t hyp1.en --model wmt20-comet-qe-da
+comet-score -s src.de -t hyp1.en --model wmt21-comet-qe-mqm
 ```
 
 Following the work on [Uncertainty-Aware MT Evaluation](https://aclanthology.org/2021.findings-emnlp.330/) you can use the --mc_dropout flag to get a variance/uncertainty value for each segment score. If this value is high, it means that the metric is less confident in that prediction.
@@ -97,7 +94,14 @@ When comparing two MT systems we encourage you to run the `comet-compare` comman
 comet-compare -s src.de -x hyp1.en -y hyp2.en -r ref.en
 ```
 
-For even more detailed MT contrastive evaluation please take a look at our new tool [MT-Telescope](https://github.com/Unbabel/MT-Telescope).
+**New: Minimum Bayes Risk Decoding:**
+
+Inspired by the work by [Amrhein et al, 2022](https://arxiv.org/abs/2202.05148) we have developed a command to perform Minimum Bayes Risk decoding. This command receives a text file with source sentences and a text file containing all the MT samples and writes to an output file the best sample according to COMET.
+
+```bash
+comet-mbr -s [SOURCE].txt -t [MT_SAMPLES].txt --num_sample [X] -o [OUTPUT_FILE].txt
+```
+
 
 #### Multi-GPU Inference:
 
@@ -106,8 +110,10 @@ COMET is optimized to be used in a single GPU by taking advantage of length batc
 Nonetheless, if your data does not have repetitions and you have more than 1 GPU available, you can **run multi-GPU inference with the following command**:
 
 ```bash
-comet-score -s src.de -t hyp1.en -r ref.en --gpus 2
+comet-score -s src.de -t hyp1.en -r ref.en --gpus 2 --quiet
 ```
+
+**Warning:** Segment-level scores using multigpu will be out of order. This is only useful for system scoring.
 
 #### Changing Embedding Cache Size:
 You can change the cache size of COMET using the following env variable:
@@ -153,11 +159,15 @@ Afrikaans, Albanian, Amharic, Arabic, Armenian, Assamese, Azerbaijani, Basque, B
 We recommend the two following models to evaluate your translations:
 
 - `wmt20-comet-da`: **DEFAULT** Reference-based Regression model build on top of XLM-R (large) and trained of Direct Assessments from WMT17 to WMT19. Same as `wmt-large-da-estimator-1719` from previous versions.
-- `wmt20-comet-qe-da`: **Reference-FREE** Regression model build on top of XLM-R (large) and trained of Direct Assessments from WMT17 to WMT19. Same as `wmt-large-qe-estimator-1719` from previous versions.
+- `wmt21-comet-qe-mqm`: **Reference-FREE** Regression model build on top of XLM-R (large), trained on Direct Assessments and fine-tuned on MQM.
 
-These two models were developed to participate on the WMT20 Metrics shared task [(Mathur et al. 2020)](https://aclanthology.org/2020.wmt-1.77.pdf) and were among the best metrics that year. Also, in a large-scale study performed by Microsoft Research these two metrics are ranked 1st and 2nd in terms of system-level decision accuracy [(Kocmi et al. 2020)](https://arxiv.org/pdf/2107.10821.pdf). At segment-level, these systems also correlate well with expert evaluations based on MQM data [(Freitag et al. 2020](https://arxiv.org/pdf/2104.14478.pdf)[; Freitag et al. 2021)](https://aclanthology.org/2021.wmt-1.73/).
+The default model was developed to [participate in the WMT20 Metrics shared task](https://aclanthology.org/2020.wmt-1.101/) [(Mathur et al. 2020)](https://aclanthology.org/2020.wmt-1.77.pdf) and were among the best metrics that year. Also, in a large-scale study performed by Microsoft Research this metrics ranked 1st in terms of system-level decision accuracy [(Kocmi et al. 2020)](https://arxiv.org/pdf/2107.10821.pdf). 
 
-For more information about the available COMET models read our metrics descriptions [here](METRICS.md)
+Our recommended QE system was [developed for the WMT21 Metrics shared task](https://aclanthology.org/2021.wmt-1.111/) and was the best performing _QE as a Metric_ that year [(Freitag et al. 2021)](https://aclanthology.org/2021.wmt-1.73/).
+
+**Note:** The range of scores between different models can be totally different. To better understand COMET scores please [take a look at our FAQs](https://unbabel.github.io/COMET/html/faqs.html)
+
+For more information about the available COMET models read our metrics descriptions [here](https://unbabel.github.io/COMET/html/models.html)
 
 ## Train your own Metric: 
 

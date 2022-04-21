@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2020 Unbabel
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Command for Minimum Bayes Risk Decoding.
 ========================================
@@ -27,12 +41,10 @@ from typing import List, Tuple
 
 import torch
 from comet.download_utils import download_model
-from comet.models import (RegressionMetric, available_metrics,
-                          load_from_checkpoint)
+from comet.models import RegressionMetric, available_metrics, load_from_checkpoint
 from jsonargparse import ArgumentParser
 from jsonargparse.typing import Path_fr
 from tqdm import tqdm
-
 
 
 def build_embeddings(
@@ -51,7 +63,7 @@ def build_embeddings(
 
     :return: source and MT embeddings.
     """
-    #TODO: Optimize this function to have faster MBR decoding!
+    # TODO: Optimize this function to have faster MBR decoding!
     src_batches = [
         sources[i : i + batch_size] for i in range(0, len(sources), batch_size)
     ]
@@ -143,7 +155,8 @@ def mbr_command() -> None:
         default=None,
     )
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         type=str,
         default="mbr_result.txt",
         help="Best candidates after running MBR decoding.",
@@ -186,18 +199,20 @@ def mbr_command() -> None:
     )
     mt_embeddings = mt_embeddings.reshape(len(sources), cfg.num_samples, -1)
     mbr_matrix = mbr_decoding(src_embeddings, mt_embeddings, model)
-    translations = [translations[i:i + cfg.num_samples] for i in range(0, len(translations), cfg.num_samples)]
+    translations = [
+        translations[i : i + cfg.num_samples]
+        for i in range(0, len(translations), cfg.num_samples)
+    ]
     assert len(sources) == len(translations)
-    
+
     best_candidates = []
     for i, samples in enumerate(translations):
         best_cand_idx = torch.argmax(mbr_matrix[i, :])
         best_candidates.append(samples[best_cand_idx])
-    
+
     with open(cfg.output, "w") as fp:
         for sample in best_candidates:
             fp.write(sample + "\n")
-    
 
 
 if __name__ == "__main__":

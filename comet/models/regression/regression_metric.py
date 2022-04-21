@@ -24,9 +24,10 @@ from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 import torch
 from comet.models.base import CometModel
+from comet.models.metrics import RegressionMetrics
 from comet.modules import FeedForward
-from torchmetrics import MetricCollection, PearsonCorrCoef, SpearmanCorrCoef, MeanSquaredError
-from transformers import AdamW
+from transformers.optimization import Adafactor
+
 
 
 class RegressionMetric(CometModel):
@@ -101,14 +102,9 @@ class RegressionMetric(CometModel):
         )
 
     def init_metrics(self):
-        metrics = MetricCollection(
-            {
-                "pearson": PearsonCorrCoef(),
-                "mse": MeanSquaredError()
-            }
-        )
-        self.train_metrics = metrics.clone(prefix="train_")
-        self.val_metrics = metrics.clone(prefix="val_")
+        self.train_metrics = RegressionMetrics(prefix="train")
+        self.val_metrics = RegressionMetrics(prefix="val")
+
 
     def configure_optimizers(
         self,
@@ -131,11 +127,15 @@ class RegressionMetric(CometModel):
         else:
             params = layer_parameters + top_layers_parameters
 
-        optimizer = AdamW(
-            params,
-            lr=self.hparams.learning_rate,
-            correct_bias=True,
-        )
+        if self.hparams.optimizer == "Adafactor":
+            optimizer = Adafactor(
+                params,
+                lr=self.hparams.learning_rate,
+                relative_step=False,
+                scale_parameter=False,
+            )
+        else:
+            optimizer = torch.optim.AdamW(params, lr=self.hparams.learning_rate)
         # scheduler = self._build_scheduler(optimizer)
         return [optimizer], []
 
